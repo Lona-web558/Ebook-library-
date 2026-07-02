@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Shelf — Personal Growth &amp; Mindset Library</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#181B1F;
+    --ink-2:#22262B;
+    --ink-3:#2C3137;
+    --paper:#F7F3EA;
+    --paper-dim:#EAE4D6;
+    --amber:#C97A3D;
+    --amber-bright:#E2924F;
+    --sage:#7A8B6F;
+    --gray:#9A958A;
+    --line: rgba(247,243,234,0.12);
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--sans);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  a{ color:inherit; }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px;
+    background:rgba(24,27,31,0.88);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .brand .mark{
+    font-family:var(--serif); font-weight:700; font-size:1.5rem; letter-spacing:-0.01em;
+  }
+  .brand .sub{
+    font-family:var(--mono); font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--gray);
+  }
+  .topbar-actions{ display:flex; align-items:center; gap:16px; }
+  .search-wrap{
+    position:relative;
+  }
+  .search-wrap input{
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:var(--sans);
+    font-size:0.85rem;
+    padding:8px 14px 8px 32px;
+    border-radius:20px;
+    width:200px;
+    transition: width .25s ease, border-color .2s ease;
+  }
+  .search-wrap input:focus{
+    outline:none; border-color:var(--amber); width:260px;
+  }
+  .search-wrap svg{
+    position:absolute; left:11px; top:50%; transform:translateY(-50%);
+    width:14px; height:14px; opacity:0.5;
+  }
+  .progress-pill{
+    font-family:var(--mono); font-size:0.7rem; color:var(--gray);
+    border:1px solid var(--line); padding:6px 12px; border-radius:20px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Layout ---------- */
+  .app{
+    display:grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 65px);
+  }
+  @media (max-width: 880px){
+    .app{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Shelf (nav) ---------- */
+  .shelf{
+    border-right:1px solid var(--line);
+    padding:22px 0 60px 0;
+    background: linear-gradient(180deg, var(--ink-2), var(--ink));
+    overflow-y:auto;
+  }
+  .shelf-label{
+    font-family:var(--mono); font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--gray); padding:0 22px 14px 22px;
+  }
+  .shelf-list{
+    list-style:none; margin:0; padding:0;
+  }
+  .spine{
+    display:flex; align-items:center; gap:14px;
+    padding:13px 22px;
+    cursor:pointer;
+    border-left:3px solid transparent;
+    transition: background .15s ease, border-color .15s ease;
+    position:relative;
+  }
+  .spine:hover{ background:rgba(247,243,234,0.04); }
+  .spine.active{
+    background:rgba(201,122,61,0.10);
+    border-left-color:var(--amber);
+  }
+  .spine-index{
+    font-family:var(--mono); font-size:0.72rem; color:var(--gray); width:20px; flex-shrink:0;
+  }
+  .spine.active .spine-index{ color:var(--amber-bright); }
+  .spine-text{ min-width:0; }
+  .spine-title{
+    font-family:var(--serif); font-weight:500; font-size:0.97rem; line-height:1.25;
+    color:var(--paper);
+  }
+  .spine.active .spine-title{ color:var(--amber-bright); }
+  .spine-author{
+    font-family:var(--sans); font-size:0.74rem; color:var(--gray); margin-top:2px;
+  }
+  .no-results{
+    padding:20px 22px; color:var(--gray); font-size:0.85rem; font-style:italic;
+  }
+
+  /* ---------- Reading pane ---------- */
+  .reading-pane{
+    padding: 56px 64px 100px 64px;
+    max-width: 760px;
+  }
+  @media (max-width: 880px){
+    .reading-pane{ padding: 36px 22px 80px 22px; max-width:100%; }
+  }
+
+  .book-eyebrow{
+    font-family:var(--mono); font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--sage); margin-bottom:14px;
+    display:flex; gap:10px; align-items:center;
+  }
+  .book-eyebrow .dot{ width:5px; height:5px; border-radius:50%; background:var(--sage); }
+
+  .book-title{
+    font-family:var(--serif); font-weight:700; font-size:2.6rem; line-height:1.08;
+    letter-spacing:-0.01em; margin:0 0 10px 0;
+    color:var(--paper);
+  }
+  .book-meta{
+    display:flex; gap:18px; flex-wrap:wrap; align-items:baseline;
+    font-family:var(--sans); color:var(--gray); font-size:0.92rem; margin-bottom:36px;
+    border-bottom:1px solid var(--line); padding-bottom:24px;
+  }
+  .book-meta strong{ color:var(--paper); font-weight:500; }
+
+  .book-summary{
+    font-family:var(--serif); font-weight:300; font-size:1.13rem; line-height:1.75;
+    color: rgba(247,243,234,0.92);
+  }
+  .book-summary p{
+    margin:0 0 22px 0;
+  }
+  .book-summary p:first-of-type::first-letter{
+    font-family:var(--serif); font-weight:600; font-size:3.2rem; line-height:0.8;
+    float:left; padding-right:10px; padding-top:6px;
+    color:var(--amber-bright);
+  }
+
+  .pane-nav{
+    display:flex; justify-content:space-between; margin-top:48px;
+    padding-top:24px; border-top:1px solid var(--line);
+  }
+  .pane-nav button{
+    background:none; border:1px solid var(--line); color:var(--paper);
+    font-family:var(--mono); font-size:0.74rem; letter-spacing:0.04em;
+    padding:10px 16px; border-radius:6px; cursor:pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .pane-nav button:hover:not(:disabled){ border-color:var(--amber); color:var(--amber-bright); }
+  .pane-nav button:disabled{ opacity:0.3; cursor:default; }
+
+  /* welcome state */
+  .welcome{
+    padding: 90px 64px;
+    max-width:640px;
+  }
+  .welcome .kicker{
+    font-family:var(--mono); font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--sage); margin-bottom:18px;
+  }
+  .welcome h1{
+    font-family:var(--serif); font-weight:600; font-size:2.4rem; line-height:1.15; margin:0 0 18px 0;
+  }
+  .welcome p{
+    font-family:var(--sans); color:var(--gray); font-size:1rem; line-height:1.7; margin-bottom:8px;
+  }
+  .welcome .hint{
+    margin-top:36px; font-family:var(--mono); font-size:0.78rem; color:var(--amber-bright);
+  }
+
+  /* scrollbar */
+  .shelf::-webkit-scrollbar{ width:6px; }
+  .shelf::-webkit-scrollbar-thumb{ background:var(--ink-3); border-radius:3px; }
+
+  @media (prefers-reduced-motion: reduce){
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">The Shelf</span>
+    <span class="sub">Gold Fundamentals e-library</span>
+  </div>
+  <div class="topbar-actions">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="searchInput" placeholder="Search title or author…" autocomplete="off">
+    </div>
+    <div class="progress-pill" id="countPill">10 titles</div>
+  </div>
+</div>
+
+<div class="app">
+  <nav class="shelf">
+    <div class="shelf-label">Personal Growth &amp; Mindset</div>
+    <ul class="shelf-list" id="shelfList"></ul>
+  </nav>
+
+  <main class="reading-pane" id="readingPane">
+    <!-- populated by JS -->
+  </main>
+</div>
+
+<script>
+const books = [
+{
+  id: 1, title: "Atomic Habits", author: "James Clear", year: 2018,
+  summary: `James Clear's "Atomic Habits" rests on a deceptively simple premise: small, consistent changes compound into remarkable results over time. Clear argues that we focus too much on goals and not enough on systems — the daily processes that lead to outcomes. Two people can share an identical goal, but only the one with a better system will reliably achieve it, because goals are about the results you want, while systems are about the processes that get you there.
+
+The book's central metaphor is the "atomic" nature of habits: they are small in isolation but become the building blocks of complex behavioral systems. Clear introduces the idea of improving by 1% each day, showing mathematically how tiny, consistent gains compound into massive differences over months and years, just as tiny, consistent losses compound into decline. This reframes self-improvement away from dramatic, unsustainable overhauls and toward small, repeatable actions.
+
+A core idea is the importance of identity-based habits over outcome-based habits. Clear distinguishes between wanting to read a book (an outcome) and wanting to become a reader (an identity). Every action is a vote for the type of person you wish to become; the most effective way to change your habits is to focus on who you wish to become, not what you want to achieve. This reframing helps habits stick because they become part of self-image rather than a checklist to complete.
+
+The practical engine of the book is the Four Laws of Behavior Change, derived from a habit loop of cue, craving, response, and reward. To build a good habit: make it obvious (design your environment so cues are visible — leave your running shoes by the door), make it attractive (use temptation bundling, pairing something you need to do with something you want to do), make it easy (reduce friction, the two-minute rule of starting absurdly small), and make it satisfying (immediate rewards reinforce repetition, since the brain prioritizes immediate gratification over long-term benefit). To break a bad habit, each law is inverted: make it invisible, unattractive, difficult, and unsatisfying.
+
+Clear places heavy emphasis on environment design. He argues that willpower is a depletable and unreliable resource, and that the people with the best self-control are typically those who need to use it the least, because they've structured their environments to minimize temptation. Visual cues and the placement of objects are often more powerful than motivation. A bowl of fruit on the counter versus a bowl of candy changes behavior more reliably than willpower alone.
+
+The book also explores habit stacking — linking a new habit to an existing one ("After I pour my morning coffee, I will meditate for one minute") — and the role of habit tracking as a form of immediate, visual satisfaction that reinforces the identity behind the behavior. Clear discusses the plateau of latent potential, the frustrating period where effort seems to produce no visible results (he uses the analogy of an ice cube that doesn't melt until the room finally reaches the right temperature, even though the heat had been rising steadily all along), which explains why many people quit just before a breakthrough.
+
+Clear also tackles the role of genetics and personality in choosing habits and goals that align with natural inclinations, the importance of joining a culture where the desired behavior is the normal behavior, and the Goldilocks Rule, which states that motivation is highest when working on tasks right at the edge of current abilities — not too easy, not too hard.
+
+Ultimately, "Atomic Habits" offers a practical, evidence-informed framework for behavior change that treats willpower as unreliable and systems and environment as the real levers of change. Its lasting contribution is reframing habits not as isolated tricks but as the compounding architecture of identity — what you repeatedly do is, quite literally, who you become.`
+},
+{
+  id: 2, title: "The 5 AM Club", author: "Robin Sharma", year: 2018,
+  summary: `Robin Sharma's "The 5 AM Club" is a business-fable wrapped around a single core proposition: waking at 5 a.m. and using the first hour of the day deliberately can transform a person's productivity, health, and sense of purpose. The book follows a frustrated entrepreneur and a struggling artist who meet a mysterious "Spellbinder" at a leadership seminar. He teaches them his philosophy of early rising through stories and metaphors, while the narrative occasionally cuts to his own backstory of personal transformation.
+
+The centerpiece of the book is the "20/20/20 Formula" for the first hour after waking. The first twenty minutes are for intense exercise, designed to flood the body with endorphins and "awaken" physiology before the world intrudes with demands. The second twenty minutes are for reflection — journaling, planning, or meditation, used to set intention before the noise of the day begins. The final twenty minutes are for growth: reading or studying something that develops skill, framed as "feeding the mind" the way exercise feeds the body.
+
+Sharma argues the early morning hours are uniquely valuable because willpower, focus, and decision-making capacity are all at their peak before they are depleted by the day's distractions — a concept related to what psychologists call decision fatigue. He calls this window "the Golden Hour" and insists that how a person spends it sets the tone for everything that follows.
+
+A recurring theme is the "Four Interior Empires" — Mindset, Heartset, Healthset, and Soulset — representing the mental, emotional, physical, and spiritual dimensions of a person, all of which Sharma argues must be deliberately cultivated rather than left to chance. He also introduces "The Five Focuses for Greatness" and "Ten Tactics of Lifelong Geniuses," lists of behaviors the book argues are common to history's most prolific creators, many of whom reportedly woke before dawn to do their most important work.
+
+The book leans heavily into the idea that comfort is the enemy of growth. Sharma's Spellbinder repeatedly emphasizes that meaningful change requires temporary discomfort, and that the resistance felt when an alarm goes off at 5 a.m. is itself diagnostic — proof a person is pushing past an old identity into a new one. This connects to a broader theme about identity change shared with other contemporary habit-change literature: habits are votes for the kind of person someone is becoming.
+
+Sharma also addresses the practicalities of the transition: the importance of sleep hygiene, going to bed earlier rather than simply forcing an earlier wake time on insufficient rest, and avoiding "victimhood" thinking where external circumstances are blamed for an inability to control one's own schedule. He encourages readers to start small, waking perhaps 5–15 minutes earlier at a time, rather than attempting an abrupt and unsustainable jump to 5 a.m.
+
+Critics have noted the book's reliance on motivational aphorisms and a somewhat thin narrative frame, and the 5 a.m. prescription itself is presented as near-universal despite chronotype research suggesting optimal wake times vary by individual. Still, the book's enduring appeal lies in its actionable structure — a simple, memorable formula readers can apply immediately — and its broader message that ritualizing the start of the day is one of the most reliable levers available for taking control of a life that otherwise feels reactive.`
+},
+{
+  id: 3, title: "Can't Hurt Me", author: "David Goggins", year: 2018,
+  summary: `David Goggins' "Can't Hurt Me" is a memoir-as-manifesto built around the idea that the human mind imposes artificial limits on the body and that those limits can be systematically destroyed through deliberate suffering. Goggins recounts a childhood marked by poverty, racism, and domestic abuse, describing how he and his mother escaped his abusive father and rebuilt their lives from near nothing. This early trauma is presented not as an excuse but as the soil from which his philosophy of self-discipline eventually grew.
+
+The book's signature concept is the "40% Rule": the idea that when the mind and body tell a person they have reached their limit, they have typically only accessed about 40% of their actual capacity. The remaining 60% is locked behind what Goggins calls the "Governor," a mental construct that throttles effort to keep a person comfortable and safe. Goggins argues most people never challenge the Governor, and so they live and die without ever discovering their real ceiling.
+
+Goggins details his transformation from an overweight, asthmatic young man working as an exterminator into a Navy SEAL, framing the SEAL training pipeline — and specifically the brutal selection course known as Hell Week — as the proving ground where he first tested and broke through his own perceived limits. He failed Hell Week twice due to injury and illness before finally completing it on his third attempt, a narrative he uses to illustrate that quitting is a habit, and the only way to break it is through repeated practice at not quitting, even when the body is screaming to stop.
+
+A major throughline is "callusing the mind": the deliberate, repeated exposure to discomfort and failure as a training method, the same way physical calluses form on skin exposed to repeated friction. Goggins argues that comfort is the great anesthetizer of human potential, numbing people into accepting mediocrity, and that voluntarily seeking out hardship — punishing physical training, extreme endurance races, cold exposure — is how a person builds the mental armor needed for the unavoidable hardships life delivers regardless.
+
+The book introduces the "Cookie Jar" technique: mentally cataloguing past achievements and moments of overcoming adversity, then "reaching into" that jar during moments of extreme difficulty to draw motivation from proof of prior resilience. He also discusses "taking souls" — a competitive mindset of using opponents' effort as fuel for one's own, common in his ultra-endurance racing career, where he became known for outlasting more naturally gifted athletes through sheer will.
+
+Goggins is candid about the costs of his approach: chronic injuries, a heart condition discovered mid-race, and the strain his relentless drive placed on relationships. The book does not present his philosophy as universally healthy or balanced; rather, it presents an extreme case study in what becomes possible when comfort is rejected as a primary life goal, leaving readers to calibrate how much of that intensity, if any, they want to apply to their own lives.
+
+Each chapter ends with "Challenges" — specific exercises readers can undertake, from cold showers to a personal accountability mirror exercise — designed to apply the book's philosophy practically rather than leave it as pure narrative. The recurring message, distilled in the title, is that the mind's protests during hardship are not reliable signals of true limits, and most people stop long before their actual capacity is exhausted. Goggins' core claim is that suffering, deliberately chosen and consistently repeated, is the most direct path to discovering what a person is actually capable of.`
+},
+{
+  id: 4, title: "Mindset", author: "Carol Dweck", year: 2006,
+  summary: `Carol Dweck's "Mindset: The New Psychology of Success" introduces and popularizes a distinction that has become foundational across education, parenting, and business: the difference between a "fixed mindset," the belief that intelligence and ability are static traits, and a "growth mindset," the belief that abilities can be developed through effort, strategy, and learning from failure. Dweck, a Stanford psychologist, draws on decades of her own research to show how this single belief shapes nearly every aspect of how people respond to challenge.
+
+Dweck demonstrates through controlled studies, many involving children given puzzles of increasing difficulty, that those praised for being "smart" became more risk-averse and avoided harder problems, fearing failure would reveal a lack of innate ability. Children praised for their effort and process instead sought out harder challenges, viewing struggle as evidence of learning rather than a verdict on intelligence. This underlies one of the book's most practically influential ideas: praise the process, not the person, because praising innate traits inadvertently teaches children, and adults, to protect their image rather than develop their skill.
+
+The book extends this framework far beyond the classroom. In sports, Dweck contrasts fixed-mindset athletes who attribute losses to lack of natural talent with growth-mindset athletes who treat defeat as diagnostic information about what to improve. In business, she examines how CEOs with fixed mindsets often surround themselves with people who confirm their genius, leading to brittle, ego-driven cultures that mask problems until they become catastrophic, while growth-mindset leaders build cultures of transparency and collective improvement.
+
+A key nuance Dweck emphasizes, and one frequently lost in popular summaries of her work, is that a growth mindset is not simply a matter of effort or positive thinking; it requires the willingness to confront difficulty honestly, seek out critical feedback, and adjust strategy when something isn't working. She is explicit that mindsets exist on a spectrum and can be domain-specific: a person might hold a growth mindset about their professional skills but a fixed mindset about their artistic ability, and most people are a mixture of both depending on context.
+
+Dweck also addresses relationships, describing how fixed-mindset partners often believe that "if it's meant to be" relationships shouldn't require effort or conflict resolution, leading them to abandon partnerships at the first sign of difficulty, whereas growth-mindset partners treat relational friction as a normal, workable part of building intimacy over time.
+
+The book's later sections focus on changing mindsets, both in oneself and in others. Dweck outlines a four-step process: learning to recognize the fixed-mindset "voice" that appears during setbacks, recognizing the choice available in how to interpret challenges, talking back to that voice with growth-oriented reframing, and taking growth-oriented action. She is careful to note this is not about pretending failure doesn't sting, but about choosing what story to tell about that failure afterward.
+
+Critics have noted that some of Dweck's original findings have faced replication challenges in subsequent research, and that "growth mindset" interventions in schools have sometimes produced smaller effects than the original studies suggested when implemented at scale. Despite this, the core distinction the book offers remains one of the most widely cited and practically applied psychological frameworks of the last two decades, and the book itself remains a clear, well-argued articulation of why the stories people tell themselves about failure shape how much they're ultimately willing to risk.`
+},
+{
+  id: 5, title: "Grit", author: "Angela Duckworth", year: 2016,
+  summary: `Angela Duckworth's "Grit: The Power of Passion and Perseverance" argues that sustained passion combined with long-term perseverance, which Duckworth defines as "grit," predicts achievement more reliably than talent alone. A psychologist who left a consulting career to teach math in underserved schools before turning to academic research, Duckworth built her career studying why some highly talented people fail to reach their potential while some less naturally gifted people achieve extraordinary things.
+
+The book opens with Duckworth's research at West Point, where she found that her "Grit Scale," a short self-assessment measuring consistency of interests and effort over time, predicted which cadets would complete the grueling summer training program known as Beast Barracks better than the Academy's own admissions formula, which heavily weighted physical fitness and leadership ratings. This became a template for her broader research across spelling bee competitors, sales teams, and cadets, repeatedly finding that grit, not raw talent, predicted who stuck with difficult pursuits long enough to excel.
+
+Duckworth introduces what she calls the "talent myth": the cultural tendency to overweight natural ability when explaining success and underweight the role of effort, in part because effort is less visible and less interesting to observe than a single moment of triumph. She offers a formula, "talent x effort = skill" and "skill x effort = achievement," to argue effort counts twice: once to convert talent into skill, and again to convert skill into achievement, meaning effort-driven improvement compounds in a way that one-time talent advantages do not.
+
+A significant portion of the book addresses how grit develops. Duckworth identifies four psychological assets that compound to build it: interest (a genuine connection to the work, since sustained effort is far easier with intrinsic enjoyment), practice (specifically deliberate practice, involving focused work on weaknesses with immediate feedback), purpose (the conviction that one's effort matters to others, which she finds becomes a more important driver of grit in adulthood than in childhood), and hope (specifically a growth-mindset-style hope rooted in the belief that effort can improve outcomes, rather than passive optimism).
+
+Duckworth also explores whether grit can be taught, examining parenting styles (she advocates being simultaneously demanding and supportive, a style she labels "wise parenting"), school cultures, and extracurricular activities. She presents evidence that participation in any extracurricular requiring sustained commitment over at least two years, regardless of the specific activity, correlates with later life outcomes, suggesting the mechanism is less about the specific skill and more about the practiced experience of pursuing something difficult to completion.
+
+The book draws on interviews with high achievers across disparate fields, including comedy, professional sports, and the military, to illustrate that grit often looks less like constant intensity and more like quiet, repeated return to the same long-term goals despite setbacks, boredom, or plateaus. Duckworth is candid that grit is not the only factor in success and explicitly cautions against treating it as a substitute for opportunity, resources, or circumstance, addressing some of the critiques her earlier popular TED talk on the subject received.
+
+Ultimately, "Grit" reframes achievement as less about discovering a singular passion in a flash of insight and more about cultivating sustained engagement with a smaller number of long-term goals, even through periods when that engagement feels effortful or unrewarding, arguing this capacity for sustained pursuit is itself a skill that can be deliberately developed over a lifetime.`
+},
+{
+  id: 6, title: "The Gap and the Gain", author: "Dan Sullivan", year: 2021,
+  summary: `Dan Sullivan and Dr. Benjamin Hardy's "The Gap and the Gain" introduces a simple but powerful lens for measuring personal progress and happiness: most people measure themselves against an ever-moving ideal (the Gap), which guarantees perpetual dissatisfaction, when they could instead measure themselves against where they started (the Gain), which reveals consistent progress and builds confidence. The book argues this single shift in measurement is one of the most significant levers available for improving both mental health and continued achievement.
+
+The authors describe the Gap as a trap created by setting an ideal — a goal, a standard, a comparison to someone else's success — and then constantly measuring the present against that ideal rather than against the past. Because ideals are infinite and constantly receding, people living in the Gap experience a permanent sense of falling short, regardless of how much they've actually accomplished. Sullivan, a business coach who has spent decades working with entrepreneurs, observed this pattern especially among highly successful people: the more they achieved, the more invisible their achievements became to themselves, because their internal yardstick kept moving with them.
+
+The Gain, by contrast, is measuring backward: comparing the present self to the past self at a defined earlier point. This produces a fundamentally different psychological experience, because past selves are fixed reference points rather than moving targets, so genuine progress becomes visible and measurable. The authors argue this isn't about lowering standards; a person can hold a Gap-oriented ideal as a directional compass for the future while still living, day to day, in Gain-oriented self-assessment.
+
+A core practice the book recommends is keeping track of daily wins, however small, specifically to train the habit of looking backward for evidence of progress rather than forward for evidence of insufficiency. The book identifies several specific "Gap traps" that commonly snare high achievers: comparing themselves to other people's curated successes, particularly via social media, measuring against unrealistic ideals absorbed from culture or upbringing, and the "negative focus" of dwelling on the 5% that went wrong while ignoring the 95% that went right.
+
+Hardy, a organizational psychologist who co-wrote the book, brings academic research on memory, identity, and motivation to support Sullivan's coaching-derived observations, including research suggesting how people narrate their past directly shapes their present identity and future behavior. The authors connect the Gap/Gain distinction to research on "hedonic adaptation," the tendency for people to quickly return to a baseline level of satisfaction after both positive and negative life events, which explains why achieving a goal rarely produces lasting happiness if the underlying measurement system remains Gap-oriented.
+
+Practical tools in the book include reframing exercises for reviewing recent setbacks through a Gain lens (asking "what did I learn and how did I grow" rather than "how far short did I fall"), techniques for celebrating progress without becoming complacent, and guidance for leaders on building Gain-oriented cultures within teams, where contribution and growth are explicitly measured and acknowledged rather than assumed.
+
+The book's ultimate argument is that happiness and continued ambition are not in tension, contrary to the common worry that contentment breeds complacency. By consistently measuring against the Gain, a person can feel genuinely satisfied with progress made while still pursuing ambitious future goals, because the satisfaction comes from a different, more stable measurement system than the one driving the ambition itself.`
+},
+{
+  id: 7, title: "The Courage to Be Disliked", author: "Ichiro Kishimi & Fumitake Koga", year: 2013,
+  summary: `"The Courage to Be Disliked" by Ichiro Kishimi and Fumitake Koga presents the psychological theories of Alfred Adler through a Socratic dialogue between a philosopher and a troubled young man. Rather than a conventional self-help text, the book unfolds as an extended argument in which the youth raises objections and the philosopher patiently dismantles them, gradually revealing an Adlerian framework that challenges many assumptions embedded in Freudian and contemporary trauma-focused psychology.
+
+The book's most provocative early claim is the rejection of "etiology," the idea that present behavior is caused by past trauma. Adlerian psychology, as presented here, instead emphasizes "teleology": the idea that people unconsciously choose goals and then select the emotions and interpretations of their past that serve those goals. The philosopher argues a person who refuses to leave their house has not been "caused" to do so by past trauma; rather, they have an underlying goal, perhaps avoiding the risk of failure, and trauma is retroactively recruited as the convenient explanation. This is presented as a liberating reframe: if the past doesn't determine the present, change is always possible.
+
+A central concept introduced is "the separation of tasks." The book argues most interpersonal suffering stems from interfering with other people's tasks or allowing others to interfere with one's own. Whether someone else likes you is fundamentally their task, not yours; your task is simply to act in line with your own values. The book's title derives from this idea: living authentically requires the courage to risk being disliked by some people, because trying to be liked by everyone means abandoning the separation of tasks and living according to others' expectations.
+
+The dialogue also addresses the dangers of vertical relationships, where people are ranked or judged in hierarchies, implicit even in well-meaning praise, since praise positions the praiser as a superior judging an inferior, versus horizontal relationships, characterized by mutual respect between equals regardless of differences in role or ability. This extends to a critique of conventional praise-based parenting and management, arguing that "courage to be normal" — accepting an ordinary existence without needing to be special — is itself a mark of psychological health.
+
+The book develops Adler's concept of "social interest," sometimes translated as community feeling, as the ultimate marker of mental health: a sense of belonging to and contributing to a community without needing external validation. The philosopher argues a sense of belonging is not received passively but actively built through contribution, and people who feel isolated often have the causality backward, believing they must first feel they belong before they can contribute, when Adlerian psychology suggests the relationship runs the other way.
+
+Later sections discuss "self-acceptance," acknowledging one's actual abilities and limitations honestly, as opposed to either self-affirmation through denial or self-deprecation, and the related concepts of trust and contribution as the building blocks of psychological happiness. The book closes with the idea that life is a series of present moments rather than a line leading toward a fixed destination, and meaning is found by fully living each moment ethically and in service of others rather than by reaching some eventual goal.
+
+The dialogue format allows the book to address common objections directly as they arise, including the youth's resistance and eventual gradual acceptance of ideas that initially seem to deny personal suffering. Its enduring appeal lies in offering a coherent alternative framework to trauma-centered popular psychology, emphasizing personal agency, present-moment choice, and the deliberate cultivation of courage over excavation of the past.`
+},
+{
+  id: 8, title: "Everything Is Figureoutable", author: "Marie Forleo", year: 2019,
+  summary: `Marie Forleo's "Everything Is Figureoutable" is built around a mantra she credits to her mother and adopted as her personal operating philosophy: the belief that, regardless of how daunting a problem appears, a solution can be found through persistence, creativity, and resourcefulness. The book positions this belief not as naive optimism but as a deliberately trained mindset that determines whether a person even attempts to solve a problem in the first place, arguing the biggest obstacle to solving problems is usually the unexamined belief they can't be solved.
+
+Forleo, an entrepreneur and online educator, opens by distinguishing "figureoutable" thinking from toxic positivity. She is explicit that adopting this mantra doesn't mean denying difficulty or pretending problems are easy; it means refusing to let the size of a problem become an excuse for inaction. She illustrates this with stories from her own life, including struggles with limited financial resources, a learning difference, and early career setbacks as a bartender and aspiring dancer before building her company.
+
+A recurring theme is the danger of what Forleo calls "Lies That Keep You Stuck" — internalized beliefs such as "I'm not ready" or "I'm not the kind of person who does this" — which she argues are rarely based in fact but instead function as self-protective stories that prevent the discomfort of trying and possibly failing. She dedicates substantial space to perfectionism and fear of judgment, framing both as disguised forms of avoidance that masquerade as high standards or prudence.
+
+The book introduces a practical toolkit, including the concept of "micro-quitting," in which people abandon goals at the first sign of difficulty without recognizing the pattern, and counters this with strategies for breaking overwhelming goals into the smallest possible next action. Forleo also emphasizes the discipline of finishing what you start, arguing that the habit of completion, regardless of the specific project, builds a generalized sense of capability that compounds over time, while a pattern of abandoning projects partway through reinforces a self-image of unreliability.
+
+Forleo addresses fear directly, distinguishing between fear as useful information and fear as a habitual, often disproportionate response to uncertainty or social risk. She offers exercises for examining the actual worst-case scenario behind a feared outcome, often finding that the catastrophized version of failure is both less likely and less permanent than anxious anticipation suggests.
+
+A significant portion of the book deals with handling "no" and rejection, drawing on Forleo's own experience being rejected from television opportunities before building a successful media business on her own terms. She frames rejection as redirection rather than verdict, encouraging readers to treat closed doors as data about which paths to abandon rather than evidence of personal inadequacy.
+
+The book also tackles money mindset, time management, and the challenge of pursuing ambitious goals while maintaining relationships and health, generally advocating for treating these as "figureoutable" problems to be addressed with the same resourcefulness as career obstacles, rather than as separate, lower-priority concerns to be sacrificed for ambition.
+
+Forleo closes with the idea that "figureoutable" is ultimately an identity choice: deciding, as a matter of consistent practice, to be the kind of person who searches for the next available action rather than the reason something can't be done. The book's central, repeated message is that most people, most of the time, give up before they've actually run out of options; they give up because they've run out of the willingness to keep looking.`
+},
+{
+  id: 9, title: "The Mountain Is You", author: "Brianna Wiest", year: 2020,
+  summary: `Brianna Wiest's "The Mountain Is You: Transforming Self-Sabotage into Self-Mastery" examines the gap between what people consciously want and what they repeatedly, unconsciously do to undermine themselves, arguing that self-sabotage is rarely a character flaw but rather a learned, once-adaptive coping mechanism that has outlived its usefulness. The title's metaphor suggests the biggest obstacle most people face isn't external circumstance but an internal landscape they themselves have built, often without realizing it.
+
+Wiest opens by reframing self-sabotage as the result of unmet emotional needs, particularly a deep-seated fear that often masquerades as procrastination, perfectionism, self-doubt, or chronic indecision. She argues these are not random failures of discipline but predictable outputs of an underlying belief system, often formed in childhood, in which a person learned that vulnerability or ambition carried real or perceived risk. The behaviors that look like sabotage in adulthood, she suggests, were often protective strategies that made sense in an earlier context.
+
+A central framework in the book is the relationship between the nervous system and behavior change. Wiest draws on concepts from trauma psychology to argue lasting change requires addressing the body's stress response, not just cognitive willpower. She describes how chronic stress or unresolved emotional patterns keep the nervous system in states of hyperarousal or shutdown, both of which undermine the executive functioning needed for sustained goal pursuit, meaning many "motivation" problems are actually dysregulation problems requiring different tools than sheer willpower.
+
+The book devotes significant attention to the "high-functioning trauma response," distinguishing between people whose struggles are visibly disruptive and those whose coping mechanisms, overworking, over-control, perfectionism, people-pleasing, appear successful from the outside while still being rooted in fear rather than genuine security. Wiest argues these less visible patterns are often harder to recognize precisely because they produce socially rewarded outcomes, masking the underlying anxiety driving them.
+
+Wiest also explores emotional intelligence as a skill rather than a fixed trait, walking through practices for identifying and processing difficult emotions rather than suppressing or being overwhelmed by them. She discusses cognitive distortions, including catastrophizing and black-and-white thinking, in maintaining self-defeating patterns, and offers reframing techniques drawn loosely from cognitive behavioral approaches.
+
+A recurring theme is the difference between healing and "fixing." Wiest argues much of contemporary self-help frames personal struggle as a problem to be efficiently solved, when many of the patterns driving self-sabotage require slower, more compassionate engagement, akin to grief processing, rather than quick behavioral hacks. She encourages readers to treat self-sabotaging behavior with curiosity rather than self-criticism, on the theory that shame typically reinforces the very patterns it's meant to correct.
+
+The book also addresses comfort zones, not as static places of safety but as dynamic psychological boundaries that expand or contract based on what a person repeatedly exposes themselves to. Wiest frames discomfort as often necessary evidence of growth, while cautioning this is different from chronic stress, which depletes rather than builds capacity.
+
+Later chapters address building new identities and habits once the underlying emotional drivers of self-sabotage have been addressed. Wiest's recurring argument throughout is that self-mastery isn't about eliminating fear or doubt, but about developing a different relationship to those internal experiences so they no longer dictate behavior by default. The "mountain" of the title is ultimately reframed not as an obstacle to defeat through force, but as a landscape to be understood, mapped, and gradually moved through with self-compassion.`
+},
+{
+  id: 10, title: "The High 5 Habit", author: "Mel Robbins", year: 2021,
+  summary: `Mel Robbins' "The High 5 Habit" introduces a deceptively simple daily practice: high-fiving your own reflection in the mirror each morning, intended to retrain the brain's automatic, often critical response to self-image into one of encouragement and support. Robbins, known for her earlier work on the "5 Second Rule," frames this practice as a deliberately physical, almost absurdly simple intervention designed to interrupt deeply ingrained patterns of self-criticism that more cognitive approaches often fail to shift.
+
+The book opens with Robbins' personal account of discovering the practice during a difficult period in her own life, marked by financial stress and self-doubt. She describes catching her own reflection one morning and, instead of the habitual inner critique, impulsively raising her hand to high-five herself in the mirror, and noticing an immediate, measurable shift in mood and confidence. This anecdotal discovery becomes the foundation for a broader argument about the power of small physical rituals to influence psychological state, drawing on research into embodied cognition, which suggests physical actions and postures can shape emotional and cognitive states, not just the reverse.
+
+A key idea in the book is the distinction between motivation, which Robbins describes as unreliable and fleeting, and ritual, which operates independently of mood. She argues the high-five habit works precisely because it doesn't require feeling confident beforehand; the action itself, repeated daily regardless of internal state, gradually reshapes the underlying belief system through consistent reinforcement, similar to how exposure-based therapeutic techniques work by acting before feeling rather than waiting to feel ready to act.
+
+Robbins devotes substantial attention to the psychology of self-talk, citing research on the brain's negativity bias, an evolutionary adaptation that prioritized threat detection but now manifests as disproportionate attention to self-criticism. She argues most people's internal monologue would be considered abusive if directed at another person, and that the high-five practice is a structured way to consciously counteract this bias with a small but consistent act of self-support.
+
+The book extends beyond the morning mirror practice into a broader philosophy of self-encouragement throughout the day, including "high-fiving" other people more often as a way of building connection, and reframing setbacks using the same energy a supportive friend might apply rather than a harsh internal critic. Robbins discusses case studies and reader testimonials describing improved confidence and reduced anxiety after adopting the practice consistently over weeks or months.
+
+Robbins connects the practice to broader themes from her earlier work, particularly the idea that the gap between intention and action is best closed through small, immediate physical interventions rather than relying on willpower to eventually arrive. She positions the high five as functioning similarly to her earlier "5 Second Rule" — counting down from five and physically moving before the brain can talk itself out of an action — both designed to bypass overthinking through immediate physical commitment.
+
+The latter sections address common obstacles to maintaining the practice, including self-consciousness and skepticism about its simplicity, particularly for readers with histories of negative body image. Robbins offers modifications, including starting with simply making eye contact with one's reflection without the high five, for readers who find the full practice initially too uncomfortable.
+
+The book's underlying argument is that confidence is not a prerequisite for taking supportive action toward oneself, but rather a byproduct of consistently taking that action regardless of how one feels in the moment, and that something as small and physically simple as a high five can serve as a reliable entry point into that larger psychological shift.`
+}
+];
+
+let currentId = null;
+
+function renderShelf(filter = "") {
+  const list = document.getElementById('shelfList');
+  const q = filter.trim().toLowerCase();
+  const filtered = books.filter(b =>
+    b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
+  );
+
+  document.getElementById('countPill').textContent =
+    filtered.length === books.length ? `${books.length} titles` : `${filtered.length} of ${books.length}`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<li class="no-results">No titles match your search.</li>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(b => `
+    <li class="spine ${b.id === currentId ? 'active' : ''}" data-id="${b.id}">
+      <span class="spine-index">${String(b.id).padStart(2,'0')}</span>
+      <span class="spine-text">
+        <div class="spine-title">${escapeHtml(b.title)}</div>
+        <div class="spine-author">${escapeHtml(b.author)}</div>
+      </span>
+    </li>
+  `).join('');
+
+  list.querySelectorAll('.spine').forEach(el => {
+    el.addEventListener('click', () => openBook(parseInt(el.dataset.id)));
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function openBook(id) {
+  currentId = id;
+  const book = books.find(b => b.id === id);
+  if (!book) return;
+
+  const idx = books.findIndex(b => b.id === id);
+  const prev = books[idx - 1];
+  const next = books[idx + 1];
+
+  const paragraphs = book.summary.trim().split(/\n\n+/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
+
+  document.getElementById('readingPane').innerHTML = `
+    <div class="book-eyebrow"><span>No. ${String(book.id).padStart(2,'0')} on the shelf</span><span class="dot"></span><span>Personal Growth &amp; Mindset</span></div>
+    <h1 class="book-title">${escapeHtml(book.title)}</h1>
+    <div class="book-meta">
+      <span>by <strong>${escapeHtml(book.author)}</strong></span>
+      <span>·</span>
+      <span>${book.year}</span>
+    </div>
+    <div class="book-summary">${paragraphs}</div>
+    <div class="pane-nav">
+      <button id="prevBtn" ${!prev ? 'disabled' : ''}>${prev ? '← ' + escapeHtml(prev.title) : '— start of shelf'}</button>
+      <button id="nextBtn" ${!next ? 'disabled' : ''}>${next ? escapeHtml(next.title) + ' →' : 'end of shelf —'}</button>
+    </div>
+  `;
+
+  if (prev) document.getElementById('prevBtn').addEventListener('click', () => openBook(prev.id));
+  if (next) document.getElementById('nextBtn').addEventListener('click', () => openBook(next.id));
+
+  renderShelf(document.getElementById('searchInput').value);
+  document.getElementById('readingPane').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderWelcome() {
+  document.getElementById('readingPane').innerHTML = `
+    <div class="welcome">
+      <div class="kicker">The Shelf — 10 titles</div>
+      <h1>Pull a book off the shelf.</h1>
+      <p>Ten essential reads on personal growth and mindset, each with a full reading summary — no fluff, no padding.</p>
+      <p>Browse the shelf on the left, or search by title or author above.</p>
+      <div class="hint">→ start with No. 01, Atomic Habits</div>
+    </div>
+  `;
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  renderShelf(e.target.value);
+});
+
+renderShelf();
+renderWelcome();
+</script>
+</body>
+</html>
